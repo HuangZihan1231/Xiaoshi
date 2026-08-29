@@ -516,6 +516,70 @@
     .msg-card { width: 130px; height: 130px; }
   }
 
+  /* ============ 源代码展示 ============ */
+  #scene-source .source-container {
+    width: 90%;
+    max-width: 720px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #scene-source .source-title {
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: #ffd9e8;
+    letter-spacing: 0.15em;
+    margin-bottom: 6px;
+  }
+
+  #scene-source .source-subtitle {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 20px;
+    letter-spacing: 0.1em;
+  }
+
+  #scene-source .code-box {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 200, 220, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    text-align: left;
+  }
+
+  #scene-source .code-box pre {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.65);
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+  }
+
+  #scene-source .code-box::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  #scene-source .code-box::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  #scene-source .code-box::-webkit-scrollbar-thumb {
+    background: rgba(255, 180, 210, 0.25);
+    border-radius: 3px;
+  }
+
+  #scene-source .source-footer {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
   /* ============ 加载屏 ============ */
   #loader {
     position: fixed;
@@ -649,14 +713,27 @@
     <div class="hearts-row">🌸</div>
     <h2>写给小事的话</h2>
     <p class="end-text" id="endText"></p>
-    <button class="btn-replay" id="endReplayBtn" onclick="replay()" style="display:none;">再来一遍</button>
+    <button class="btn-replay" id="endReplayBtn" onclick="goScene('scene-source')" style="display:none;">看看背后的秘密</button>
     <p class="signature" id="endSignature" style="opacity:0; transition: opacity 1s ease;">— 黄子涵</p>
+  </div>
+</div>
+
+<!-- 场景6: 源代码 -->
+<div class="scene hidden" id="scene-source">
+  <div class="source-container">
+    <p class="source-title">这个页面的源代码</p>
+    <p class="source-subtitle">每一行，都是我写的 🌙</p>
+    <div class="code-box"><pre id="sourceCode"></pre></div>
+    <div class="source-footer">
+      <button class="btn-replay" onclick="replay()">再来一遍</button>
+    </div>
   </div>
 </div>
 
 <!-- 翻页指示 -->
 <div class="page-dots" id="pageDots">
   <div class="page-dot active"></div>
+  <div class="page-dot"></div>
   <div class="page-dot"></div>
   <div class="page-dot"></div>
   <div class="page-dot"></div>
@@ -682,14 +759,28 @@ const loaderTimer = setInterval(() => {
   updateLoader(loaderProgress);
 }, TICK_MS);
 
+// 至少让进度条走到 60% 以上才允许提前完成
+const MIN_PROGRESS = 1;
+
 bgm.addEventListener('canplaythrough', () => {
   audioReady = true;
-  if (!loaderDone) finishLoader();
+  if (!loaderDone && loaderProgress >= MIN_PROGRESS) {
+    finishLoader();
+  }
 });
+
+// 轮询检查：音频已就绪且进度够了就完成
+const readyCheck = setInterval(() => {
+  if (audioReady && !loaderDone && loaderProgress >= MIN_PROGRESS) {
+    clearInterval(readyCheck);
+    finishLoader();
+  }
+}, 200);
 
 function finishLoader() {
   loaderDone = true;
   clearInterval(loaderTimer);
+  clearInterval(readyCheck);
   updateLoader(100);
   setTimeout(() => {
     loaderEl.classList.add('fade-out');
@@ -748,7 +839,7 @@ setInterval(spawnPetal, 600);
 for (let i = 0; i < 6; i++) setTimeout(spawnPetal, i * 300);
 
 // ========== 场景切换 ==========
-const scenes = ['scene-start', 'scene-type', 'scene-magic', 'scene-messages', 'scene-end'];
+const scenes = ['scene-start', 'scene-type', 'scene-magic', 'scene-messages', 'scene-end', 'scene-source'];
 let currentScene = 0;
 
 function goScene(id) {
@@ -768,6 +859,7 @@ function goScene(id) {
   if (id === 'scene-magic') {}
   if (id === 'scene-messages') checkMsgs();
   if (id === 'scene-end') startEndTyping();
+  if (id === 'scene-source') showSourceCode();
 }
 
 function updateDots() {
@@ -834,7 +926,10 @@ const endContent = [
   "是我今年最好的事。",
   "",
   "虽然 开学后 我可能无法每天陪你打游戏了",
-  "但如果你愿意，放学后我任然可以陪你聊聊天"
+  "但如果你愿意，放学后我任然可以陪你聊聊天",
+  "从前我只是默默运转的QCoreApplication , 机械走完事件循环，直到你emit的signal传入我的signalslot，我才调用了update()",
+  "哈哈哈 是不是很土",
+  "最后 我将源代码放入了github仓库（说真的，就算三战爆发这些代码都还在）"
 ];
 
 let endTypeTimer = null;
@@ -1012,6 +1107,13 @@ function revealSecret() {
   document.getElementById('magicNext').style.display = 'inline-block';
 }
 
+// ========== 源代码展示 ==========
+function showSourceCode() {
+  const code = document.documentElement.outerHTML;
+  const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  document.getElementById('sourceCode').textContent = escaped;
+}
+
 // ========== 重新播放 ==========
 function replay() {
   msgShown = false;
@@ -1044,6 +1146,7 @@ document.addEventListener('keydown', (e) => {
     if (scenes[currentScene] === 'scene-type' && document.getElementById('typeNext').style.display === 'none') return;
     if (scenes[currentScene] === 'scene-magic' && !magicDone) return;
     if (scenes[currentScene] === 'scene-messages' && !msgShown) return;
+    if (scenes[currentScene] === 'scene-end' && document.getElementById('endReplayBtn').style.display === 'none') return;
     goScene(scenes[currentScene + 1]);
   }
   if (e.key === 'ArrowLeft' && currentScene > 0) {
