@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>给小事的惊喜 🌙</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif SC', 'Songti SC', serif;
+    overflow: hidden;
+    background: linear-gradient(160deg, #0a0a2e 0%, #1a1a4e 30%, #2d1b4e 60%, #1a0a2e 100%);
+    height: 100vh;
+    width: 100vw;
+    color: #fff;
+    user-select: none;
+  }
+
+  /* ============ 星空背景 ============ */
+  .stars-bg {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* ============ 花瓣 ============ */
+  .petal {
+    position: fixed;
+    top: -30px;
+    z-index: 1;
+    pointer-events: none;
+    animation: fall linear infinite;
+  }
+
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ============ 场景容器 ============ */
+  .scene {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .scene.active { opacity: 1; }
+  .scene.hidden { opacity: 0; pointer-events: none; }
+
+  /* ============ 开场 ============ */
+  #scene-start .moon {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff9e6, #ffe9a0 40%, #ffd06b 70%, #e8b94e);
+    box-shadow: 0 0 40px rgba(255, 223, 130, 0.5), 0 0 80px rgba(255, 209, 107, 0.3);
+    margin-bottom: 35px;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  #scene-start h1 {
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    margin-bottom: 12px;
+    color: #ffd9e8;
+  }
+
+  #scene-start .subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 40px;
+    letter-spacing: 0.15em;
+  }
+
+  .btn-enter {
+    padding: 14px 48px;
+    border: 1px solid rgba(255, 200, 220, 0.4);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffd9e8;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.2em;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .btn-enter:hover {
+    background: rgba(255, 180, 210, 0.15);
+    border-color: rgba(255, 200, 220, 0.7);
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 180, 210, 0.3);
+  }
+
+  /* ============ 打字机 ============ */
+  #scene-type .type-container {
+    max-width: 560px;
+    min-height: 200px;
+  }
+
+  #scene-type .type-text {
+    font-size: 1.3rem;
+    font-weight: 300;
+    line-height: 2.4;
+    color: #ffd9e8;
+    text-shadow: 0 0 20px rgba(255, 180, 210, 0.4);
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.3rem;
+    background: #ffd9e8;
+    animation: blink 0.8s infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ============ 翻页 ============ */
+  .page-dots {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 20;
+  }
+
+  .page-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .page-dot.active {
+    background: #ffd9e8;
+    box-shadow: 0 0 10px rgba(255, 180, 210, 0.6);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  /* ============ 消息卡 ============ */
+  #scene-messages .msg-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+    max-width: 640px;
+  }
+
+  .msg-card {
+    width: 150px; height: 150px;
+    perspective: 600px;
+    cursor: pointer;
+  }
+
+  .msg-card-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s ease;
+  }
+
+  .msg-card.flipped .msg-card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .msg-front, .msg-back {
+    position: absolute;
+    width: 100%; height: 100%;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .msg-front {
+    background: linear-gradient(135deg, rgba(255, 180, 210, 0.12), rgba(180, 160, 255, 0.12));
+    border: 1px solid rgba(255, 200, 220, 0.2);
+    font-size: 2rem;
+  }
+
+  .msg-back {
+    background: linear-gradient(135deg, rgba(255, 180, 210, 0.2), rgba(180, 160, 255, 0.2));
+    border: 1px solid rgba(255, 200, 220, 0.35);
+    transform: rotateY(180deg);
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: #ffd9e8;
+  }
+
+  #scene-messages .hint {
+    margin-top: 30px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.1em;
+  }
+
+  /* 特殊卡片 */
+  .msg-card.special .msg-front {
+    background: linear-gradient(135deg, rgba(255, 215, 100, 0.15), rgba(255, 160, 90, 0.15));
+    border: 1px solid rgba(255, 215, 100, 0.3);
+    box-shadow: 0 0 20px rgba(255, 215, 100, 0.15);
+    animation: specialPulse 2s ease-in-out infinite;
+  }
+
+  .msg-card.special .msg-front .lock-icon {
+    font-size: 1.3rem;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .msg-card.special .msg-front .lock-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: rgba(255, 215, 100, 0.7);
+  }
+
+  .msg-card.special.unlocked .msg-front .lock-icon {
+    content: '🔓';
+  }
+
+  .msg-card.special.unlocked .msg-front .lock-text {
+    color: rgba(255, 215, 100, 0.9);
+  }
+
+  .msg-card.special .msg-back {
+    background: linear-gradient(135deg, rgba(255, 215, 100, 0.22), rgba(255, 160, 90, 0.22));
+    border: 1px solid rgba(255, 215, 100, 0.4);
+  }
+
+  .msg-card.special.unlocked .msg-front {
+    animation: none;
+    box-shadow: 0 0 30px rgba(255, 215, 100, 0.4);
+    border-color: rgba(255, 215, 100, 0.6);
+    cursor: pointer;
+  }
+
+  .msg-card.special:not(.unlocked) .msg-front {
+    cursor: not-allowed;
+  }
+
+  @keyframes specialPulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 100, 0.12); }
+    50% { box-shadow: 0 0 28px rgba(255, 215, 100, 0.3); }
+  }
+
+  /* Toast 提示 */
+  .msg-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    color: #ffd9e8;
+    padding: 14px 28px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 200, 220, 0.25);
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    white-space: nowrap;
+  }
+
+  .msg-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ============ 结尾 ============ */
+  #scene-end .end-container {
+    max-width: 480px;
+  }
+
+  #scene-end .hearts-row {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    animation: heartBeat 1.5s ease-in-out infinite;
+  }
+
+  @keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  #scene-end h2 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 20px;
+    color: #ffd9e8;
+    letter-spacing: 0.1em;
+  }
+
+  #scene-end .end-text {
+    font-size: 1rem;
+    line-height: 2.2;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 35px;
+  }
+
+  #scene-end .signature {
+    font-size: 0.8rem;
+    color: rgba(255, 200, 220, 0.5);
+    letter-spacing: 0.2em;
+    margin-top: 20px;
+  }
+
+  .btn-replay {
+    padding: 12px 36px;
+    border: 1px solid rgba(255, 200, 220, 0.3);
+    border-radius: 25px;
+    background: transparent;
+    color: rgba(255, 200, 220, 0.7);
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.15em;
+    transition: all 0.4s ease;
+  }
+
+  .btn-replay:hover {
+    color: #ffd9e8;
+    border-color: rgba(255, 200, 220, 0.6);
+  }
+
+  /* ============ 魔术环节 ============ */
+  #scene-magic .magic-title {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #ffd9e8;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  #scene-magic .magic-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 40px;
+    letter-spacing: 0.1em;
+  }
+
+  .magic-btn-wrap {
+    position: relative;
+    width: 160px; height: 160px;
+    margin-bottom: 40px;
+  }
+
+  .magic-btn-ring {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .magic-btn-ring circle {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .magic-btn-ring .ring-bg {
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+
+  .magic-btn-ring .ring-fill {
+    stroke: #ffd9e8;
+    stroke-dasharray: 0 999;
+    filter: drop-shadow(0 0 8px rgba(255, 180, 210, 0.6));
+  }
+
+  .magic-btn-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 200, 220, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffd9e8;
+    font-family: inherit;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .magic-btn-center:active,
+  .magic-btn-center.pressing {
+    background: rgba(255, 180, 210, 0.15);
+    border-color: rgba(255, 200, 220, 0.7);
+    box-shadow: 0 0 30px rgba(255, 180, 210, 0.3);
+  }
+
+  .magic-btn-center.done {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .magic-reveal {
+    opacity: 0;
+    transform: scale(0.6);
+    transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .magic-reveal.shown {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  .magic-reveal .reveal-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+
+  .magic-reveal .reveal-name {
+    font-size: 2.2rem;
+    font-weight: 400;
+    color: #ffd9e8;
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 30px rgba(255, 180, 210, 0.6), 0 0 60px rgba(255, 180, 210, 0.3);
+    margin-bottom: 30px;
+  }
+
+  .magic-reveal .btn-secret {
+    padding: 10px 32px;
+    border: 1px solid rgba(255, 200, 220, 0.3);
+    border-radius: 22px;
+    background: transparent;
+    color: rgba(255, 200, 220, 0.7);
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.15em;
+    transition: all 0.4s ease;
+  }
+
+  .magic-reveal .btn-secret:hover {
+    color: #ffd9e8;
+    border-color: rgba(255, 200, 220, 0.6);
+  }
+
+  .magic-secret-text {
+    font-size: 1.1rem;
+    color: #ffe9b0;
+    letter-spacing: 0.15em;
+    margin: 20px 0 30px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  .magic-secret-text.shown { opacity: 1; }
+
+  .magic-secret-text .shh-icon {
+    font-size: 1.5rem;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 600px) {
+    #scene-type .type-text { font-size: 1.1rem; line-height: 2.2; }
+    #scene-end h2 { font-size: 1.25rem; }
+    #scene-end .end-text { font-size: 0.9rem; }
+    .msg-card { width: 130px; height: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 星空 -->
+<div class="stars-bg" id="starsBg"></div>
+
+<!-- 场景1: 开场 -->
+<div class="scene active" id="scene-start">
+  <div class="moon"></div>
+  <h1>致 小事</h1>
+  <p class="subtitle">有一件小事，想让你知道</p>
+  <button class="btn-enter" onclick="goScene('scene-type')">快 点 进 入</button>
+</div>
+
+<!-- 场景2: 打字机 -->
+<div class="scene hidden" id="scene-type">
+  <div class="type-container">
+    <p class="type-text" id="typeText"></p>
+  </div>
+  <button class="btn-enter" id="typeNext" onclick="goScene('scene-magic')" style="margin-top: 45px; display: none;">继 续</button>
+</div>
+
+<!-- 场景3: 魔术 -->
+<div class="scene hidden" id="scene-magic">
+  <p class="magic-title">其实我会读心术</p>
+  <p class="magic-subtitle">请长按下面的按钮</p>
+
+  <div class="magic-btn-wrap">
+    <svg class="magic-btn-ring" width="160" height="160" viewBox="0 0 160 160">
+      <circle class="ring-bg" cx="80" cy="80" r="74"/>
+      <circle class="ring-fill" id="ringFill" cx="80" cy="80" r="74"/>
+    </svg>
+    <div class="magic-btn-center" id="magicBtn">长按我 嗨呀</div>
+  </div>
+
+  <div class="magic-reveal" id="magicReveal">
+    <p class="reveal-label">你的名字是 ——</p>
+    <p class="reveal-name">陈熙雯</p>
+    <button class="btn-secret" id="btnSecret" onclick="revealSecret()">我是怎么知道的？</button>
+    <p class="magic-secret-text" id="secretText"><span class="shh-icon">🤫</span>嘘，天机不可泄露！\n哈哈哈，你别生气，放心我没有黑入你任何设备</p>
+    <button class="btn-enter" id="magicNext" onclick="goScene('scene-messages')" style="display: none; margin-top: 10px;">继 续</button>
+  </div>
+</div>
+
+<!-- 场景4: 消息卡 -->
+<div class="scene hidden" id="scene-messages">
+  <div class="msg-grid" id="msgGrid"></div>
+  <p class="hint">点击每一张卡片 ♡</p>
+  <button class="btn-enter" id="msgNext" onclick="goScene('scene-end')" style="margin-top: 30px; display: none;">最 后</button>
+</div>
+
+<div class="msg-toast" id="msgToast"></div>
+
+<!-- 场景4: 结尾 -->
+<div class="scene hidden" id="scene-end">
+  <div class="end-container">
+    <div class="hearts-row">🌸</div>
+    <h2>写给小事的话</h2>
+    <p class="end-text" id="endText"></p>
+    <button class="btn-replay" id="endReplayBtn" onclick="replay()" style="display:none;">再来一遍</button>
+    <p class="signature" id="endSignature" style="opacity:0; transition: opacity 1s ease;">— 黄子涵</p>
+  </div>
+</div>
+
+<!-- 翻页指示 -->
+<div class="page-dots" id="pageDots">
+  <div class="page-dot active"></div>
+  <div class="page-dot"></div>
+  <div class="page-dot"></div>
+  <div class="page-dot"></div>
+  <div class="page-dot"></div>
+</div>
+
+<script>
+// ========== 星空生成 ==========
+(function() {
+  const bg = document.getElementById('starsBg');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --dur:${2 + Math.random()*4}s;
+      --delay:${Math.random()*4}s;
+    `;
+    bg.appendChild(s);
+  }
+})();
+
+// ========== 花瓣生成 ==========
+function spawnPetal() {
+  const p = document.createElement('div');
+  p.className = 'petal';
+  const size = 12 + Math.random() * 10;
+  const colors = ['#ffb6c1', '#ffc0cb', '#ffd1dc', '#f8c8dc', '#e8b4d8'];
+  p.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 20 20">
+    <path d="M10 2 C12 6 16 8 18 10 C16 12 12 14 10 18 C8 14 4 12 2 10 C4 8 8 6 10 2 Z"
+      fill="${colors[Math.floor(Math.random()*colors.length)]}" opacity="0.7"/>
+  </svg>`;
+  p.style.left = Math.random() * 100 + '%';
+  p.style.animationDuration = (6 + Math.random() * 6) + 's';
+  p.style.animationDelay = Math.random() * 2 + 's';
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 14000);
+}
+setInterval(spawnPetal, 600);
+for (let i = 0; i < 6; i++) setTimeout(spawnPetal, i * 300);
+
+// ========== 场景切换 ==========
+const scenes = ['scene-start', 'scene-type', 'scene-magic', 'scene-messages', 'scene-end'];
+let currentScene = 0;
+
+function goScene(id) {
+  scenes.forEach(s => {
+    const el = document.getElementById(s);
+    el.classList.remove('active');
+    el.classList.add('hidden');
+  });
+  const target = document.getElementById(id);
+  target.classList.remove('hidden');
+  target.classList.add('active');
+
+  currentScene = scenes.indexOf(id);
+  updateDots();
+
+  if (id === 'scene-type') startTyping();
+  if (id === 'scene-magic') {}
+  if (id === 'scene-messages') checkMsgs();
+  if (id === 'scene-end') startEndTyping();
+}
+
+function updateDots() {
+  document.querySelectorAll('.page-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === currentScene);
+  });
+}
+
+// ========== 打字机 ==========
+const typeContent = [
+  "嗨，小事。",
+  "你大概不知道，",
+  "在 MustScream 里第一次听到你声音的时候，",
+  "我就觉得这个人不太一样。",
+  "在这个快节奏的时代，",
+  "也能有人用心倾听我的80年老歌。",
+  "虽然我见过很多人",
+  "但说实话，你是第一个认可我技术的女孩"
+];
+
+let typeIdx = 0;
+let typeCharIdx = 0;
+let typeTimer = null;
+
+function startTyping() {
+  const el = document.getElementById('typeText');
+  const nextBtn = document.getElementById('typeNext');
+  el.innerHTML = '';
+  typeIdx = 0;
+  typeCharIdx = 0;
+  nextBtn.style.display = 'none';
+
+  function typeNext() {
+    if (typeIdx >= typeContent.length) {
+      el.innerHTML = el.innerHTML.replace('<span class="cursor"></span>', '');
+      nextBtn.style.display = 'inline-block';
+      return;
+    }
+    const line = typeContent[typeIdx];
+    if (typeCharIdx <= line.length) {
+      const typed = typeContent.slice(0, typeIdx).join('<br>');
+      el.innerHTML = typed + (typed ? '<br>' : '') + line.substring(0, typeCharIdx) + '<span class="cursor"></span>';
+      typeCharIdx++;
+      typeTimer = setTimeout(typeNext, 90 + Math.random() * 40);
+    } else {
+      typeIdx++;
+      typeCharIdx = 0;
+      typeTimer = setTimeout(typeNext, 500);
+    }
+  }
+  typeNext();
+}
+
+// ========== 结尾打字机 ==========
+const endContent = [
+  "姐姐，",
+  "谢谢你愿意",
+  "花时间陪我玩游戏。",
+  "",
+  "也谢谢你",
+  "对我技术的认可。",
+  "",
+  "在 MustScream 里认识你，",
+  "是我今年最好的事。",
+  "",
+  "虽然 开学后 我可能无法每天陪你打游戏了",
+  "但如果你愿意，放学后我任然可以陪你聊聊天"
+];
+
+let endTypeTimer = null;
+
+function startEndTyping() {
+  const el = document.getElementById('endText');
+  const replayBtn = document.getElementById('endReplayBtn');
+  const sig = document.getElementById('endSignature');
+  el.innerHTML = '';
+  replayBtn.style.display = 'none';
+  sig.style.opacity = '0';
+
+  let lineIdx = 0;
+  let charIdx = 0;
+
+  function typeEnd() {
+    if (lineIdx >= endContent.length) {
+      replayBtn.style.display = 'inline-block';
+      sig.style.opacity = '0.6';
+      return;
+    }
+    const line = endContent[lineIdx];
+    if (line === '') {
+      el.innerHTML += '<br>';
+      lineIdx++;
+      charIdx = 0;
+      endTypeTimer = setTimeout(typeEnd, 400);
+      return;
+    }
+    if (charIdx <= line.length) {
+      const built = endContent.slice(0, lineIdx).join('<br>');
+      el.innerHTML = built + (built ? '<br>' : '') + line.substring(0, charIdx) + '<span class="cursor"></span>';
+      charIdx++;
+      endTypeTimer = setTimeout(typeEnd, 80 + Math.random() * 40);
+    } else {
+      el.innerHTML = endContent.slice(0, lineIdx + 1).join('<br>');
+      lineIdx++;
+      charIdx = 0;
+      endTypeTimer = setTimeout(typeEnd, 400);
+    }
+  }
+  typeEnd();
+}
+
+// ========== 消息卡片 ==========
+const messages = [
+  { emoji: '你猜', text: '好好生活，所有的好运都慢慢奔向你' },
+  { emoji: '你猜', text: '嗨呀\n（文化水平实在有限 哈哈哈）' },
+  { emoji: '你猜', text: '愿你的生活满是温柔，遇到皆是善意' },
+  { emoji: '你猜', text: '愿你生活里多一点惊喜，少一点心事' },
+  { emoji: '你猜', text: '希望你一直开开心心，所有美好都偏向于你' },
+  { emoji: '你猜', text: '愿你平安喜乐，事事如愿，每晚都能睡个好觉' },
+  { emoji: '🔒', text: '姐姐', special: true }
+];
+
+(function buildMsgs() {
+  const grid = document.getElementById('msgGrid');
+  messages.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'msg-card' + (m.special ? ' special' : '');
+    if (m.special) {
+      card.innerHTML = `
+        <div class="msg-card-inner">
+          <div class="msg-front">
+            <span class="lock-icon">🔒</span>
+            <span class="lock-text">待解锁</span>
+          </div>
+          <div class="msg-back">${m.text.replace(/\n/g, '<br>')}</div>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="msg-card-inner">
+          <div class="msg-front">${m.emoji}</div>
+          <div class="msg-back">${m.text.replace(/\n/g, '<br>')}</div>
+        </div>`;
+    }
+    card.addEventListener('click', () => {
+      if (m.special && !card.classList.contains('unlocked')) {
+        showToast('在看我之前，也许你应该先看完其他的卡片 哈哈哈');
+        return;
+      }
+      card.classList.toggle('flipped');
+      checkMsgs();
+    });
+    grid.appendChild(card);
+  });
+})();
+
+let msgShown = false;
+let msgToastTimer = null;
+
+function showToast(text) {
+  const toast = document.getElementById('msgToast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(msgToastTimer);
+  msgToastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function checkMsgs() {
+  if (msgShown) return;
+  const allCards = document.querySelectorAll('.msg-card:not(.special)');
+  const flipped = document.querySelectorAll('.msg-card:not(.special).flipped').length;
+  const specialCard = document.querySelector('.msg-card.special');
+
+  // 全部普通卡片翻完 → 解锁特殊卡
+  if (flipped >= allCards.length && specialCard && !specialCard.classList.contains('unlocked')) {
+    specialCard.classList.add('unlocked');
+    specialCard.querySelector('.lock-icon').textContent = '🔓';
+    specialCard.querySelector('.lock-text').textContent = '已解锁';
+  }
+
+  // 特殊卡也翻了 → 显示"最后"按钮
+  if (flipped >= allCards.length && specialCard && specialCard.classList.contains('flipped')) {
+    document.getElementById('msgNext').style.display = 'inline-block';
+    msgShown = true;
+  }
+}
+
+// ========== 魔术环节 ==========
+const magicBtn = document.getElementById('magicBtn');
+const ringFill = document.getElementById('ringFill');
+const magicReveal = document.getElementById('magicReveal');
+const ringCircumference = 2 * Math.PI * 74; // ≈ 464.96
+let pressTimer = null;
+let progressTimer = null;
+let progress = 0;
+let magicDone = false;
+const magicBtnText = '长按我 嗨呀';
+
+function startPress() {
+  if (magicDone) return;
+  magicBtn.classList.add('pressing');
+  const PRESS_DURATION = 4000; // 4秒长按
+  const TICK = 50;
+  progress = 0;
+  progressTimer = setInterval(() => {
+    progress += TICK;
+    const pct = Math.min(progress / PRESS_DURATION, 1);
+    ringFill.setAttribute('stroke-dasharray', `${(pct * ringCircumference).toFixed(2)} 999`);
+    magicBtn.textContent = Math.floor(pct * 100) + '%';
+    if (pct >= 1) {
+      clearInterval(progressTimer);
+      completeMagic();
+    }
+  }, TICK);
+}
+
+function cancelPress() {
+  if (magicDone) return;
+  magicBtn.classList.remove('pressing');
+  clearInterval(progressTimer);
+  progress = 0;
+  ringFill.setAttribute('stroke-dasharray', '0 999');
+  magicBtn.textContent = magicBtnText;
+}
+
+function completeMagic() {
+  magicDone = true;
+  magicBtn.classList.remove('pressing');
+  magicBtn.classList.add('done');
+  magicReveal.classList.add('shown');
+}
+
+magicBtn.addEventListener('mousedown', startPress);
+magicBtn.addEventListener('mouseup', cancelPress);
+magicBtn.addEventListener('mouseleave', cancelPress);
+magicBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(); });
+magicBtn.addEventListener('touchend', (e) => { e.preventDefault(); cancelPress(); });
+magicBtn.addEventListener('touchcancel', cancelPress);
+
+function revealSecret() {
+  document.getElementById('secretText').classList.add('shown');
+  document.getElementById('btnSecret').style.display = 'none';
+  document.getElementById('magicNext').style.display = 'inline-block';
+}
+
+// ========== 重新播放 ==========
+function replay() {
+  msgShown = false;
+  magicDone = false;
+  document.getElementById('msgNext').style.display = 'none';
+  document.getElementById('typeNext').style.display = 'none';
+  document.getElementById('endReplayBtn').style.display = 'none';
+  document.getElementById('endSignature').style.opacity = '0';
+  document.getElementById('magicNext').style.display = 'none';
+  document.getElementById('btnSecret').style.display = '';
+  document.getElementById('secretText').classList.remove('shown');
+  magicReveal.classList.remove('shown');
+  ringFill.setAttribute('stroke-dasharray', '0 999');
+  magicBtn.classList.remove('done');
+  magicBtn.textContent = magicBtnText;
+  document.querySelectorAll('.msg-card').forEach(c => {
+    c.classList.remove('flipped');
+    if (c.classList.contains('special')) {
+      c.classList.remove('unlocked');
+      c.querySelector('.lock-icon').textContent = '🔒';
+      c.querySelector('.lock-text').textContent = '待解锁';
+    }
+  });
+  goScene('scene-start');
+}
+
+// ========== 键盘左右切换 ==========
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' && currentScene < scenes.length - 1) {
+    if (scenes[currentScene] === 'scene-type' && document.getElementById('typeNext').style.display === 'none') return;
+    if (scenes[currentScene] === 'scene-magic' && !magicDone) return;
+    if (scenes[currentScene] === 'scene-messages' && !msgShown) return;
+    goScene(scenes[currentScene + 1]);
+  }
+  if (e.key === 'ArrowLeft' && currentScene > 0) {
+    goScene(scenes[currentScene - 1]);
+  }
+});
+</script>
+</body>
+</html>
