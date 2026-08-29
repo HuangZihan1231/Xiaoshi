@@ -521,6 +521,7 @@
 
 <!-- 星空 -->
 <div class="stars-bg" id="starsBg"></div>
+<audio id="bgm" src="1.mp3" loop autoplay></audio>
 
 <!-- 场景1: 开场 -->
 <div class="scene active" id="scene-start">
@@ -540,7 +541,7 @@
 
 <!-- 场景3: 魔术 -->
 <div class="scene hidden" id="scene-magic">
-  <p class="magic-title">其实我会魔术</p>
+  <p class="magic-title">其实我会读心术</p>
   <p class="magic-subtitle">请长按下面的按钮</p>
 
   <div class="magic-btn-wrap">
@@ -590,6 +591,13 @@
 </div>
 
 <script>
+// ========== 背景音乐 ==========
+const bgm = document.getElementById('bgm');
+bgm.volume = 0.5;
+document.addEventListener('click', () => {
+  if (bgm.paused) bgm.play().catch(() => {});
+}, { once: true });
+
 // ========== 星空生成 ==========
 (function() {
   const bg = document.getElementById('starsBg');
