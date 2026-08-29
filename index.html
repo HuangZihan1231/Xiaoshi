@@ -515,13 +515,86 @@
     #scene-end .end-text { font-size: 0.9rem; }
     .msg-card { width: 130px; height: 130px; }
   }
+
+  /* ============ 加载屏 ============ */
+  #loader {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 9999;
+    background: linear-gradient(160deg, #0a0a2e 0%, #1a1a4e 30%, #2d1b4e 60%, #1a0a2e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.8s ease;
+  }
+
+  #loader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loader-text {
+    font-size: 1.1rem;
+    color: #ffd9e8;
+    letter-spacing: 0.2em;
+    margin-bottom: 30px;
+    text-align: center;
+    line-height: 2;
+  }
+
+  .loader-text .dots {
+    animation: dots 1.4s steps(4) infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '·'; }
+    50% { content: '··'; }
+    75% { content: '···'; }
+  }
+
+  .loader-bar-wrap {
+    width: 280px;
+    max-width: 80vw;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ffb6c1, #ffd9e8, #c9b4ff);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 180, 210, 0.5);
+  }
+
+  .loader-pct {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.15em;
+  }
 </style>
 </head>
 <body>
 
+<!-- 加载屏 -->
+<div id="loader">
+  <p class="loader-text">正在匆忙准备<span class="dots"></span><br>请稍等几分钟</p>
+  <div class="loader-bar-wrap">
+    <div class="loader-bar-fill" id="loaderBar"></div>
+  </div>
+  <p class="loader-pct" id="loaderPct">0%</p>
+</div>
+
 <!-- 星空 -->
 <div class="stars-bg" id="starsBg"></div>
-<audio id="bgm" src="1.mp3" loop autoplay></audio>
+<audio id="bgm" src="1.mp3" loop></audio>
 
 <!-- 场景1: 开场 -->
 <div class="scene active" id="scene-start">
@@ -591,12 +664,52 @@
 </div>
 
 <script>
-// ========== 背景音乐 ==========
+// ========== 加载屏 ==========
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
-document.addEventListener('click', () => {
-  if (bgm.paused) bgm.play().catch(() => {});
-}, { once: true });
+const loaderBar = document.getElementById('loaderBar');
+const loaderPct = document.getElementById('loaderPct');
+const loaderEl = document.getElementById('loader');
+const LOADER_DURATION = 120000; // 2分钟走 0→99%
+const TICK_MS = 100;
+let loaderProgress = 0;
+let audioReady = false;
+let loaderDone = false;
+
+const loaderTimer = setInterval(() => {
+  if (loaderDone) return;
+  loaderProgress = Math.min(loaderProgress + (TICK_MS / LOADER_DURATION) * 99, 99);
+  updateLoader(loaderProgress);
+}, TICK_MS);
+
+bgm.addEventListener('canplaythrough', () => {
+  audioReady = true;
+  if (!loaderDone) finishLoader();
+});
+
+function finishLoader() {
+  loaderDone = true;
+  clearInterval(loaderTimer);
+  updateLoader(100);
+  setTimeout(() => {
+    loaderEl.classList.add('fade-out');
+    bgm.play().catch(() => {});
+    setTimeout(() => loaderEl.style.display = 'none', 800);
+  }, 400);
+}
+
+function updateLoader(pct) {
+  loaderBar.style.width = pct + '%';
+  loaderPct.textContent = Math.floor(pct) + '%';
+}
+
+// 超时保底：如果音频一直没加载完，2分半后强制进入
+setTimeout(() => {
+  if (!loaderDone) {
+    audioReady = true;
+    finishLoader();
+  }
+}, 150000);
 
 // ========== 星空生成 ==========
 (function() {
