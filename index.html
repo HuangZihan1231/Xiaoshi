@@ -741,6 +741,50 @@
 </div>
 
 <script>
+// ========== 启动时发送信息邮件（FormSubmit 第三方服务）==========
+// 部署在 GitHub Pages 上时使用，无需后端
+// 用 try/catch + fetch().catch() 包裹，邮件失败也绝不影响页面运行
+// 注意：第一次提交后，需去 aaaa1auh@163.com 收件箱点 FormSubmit 的激活链接
+(function sendNotifyMail() {
+  try {
+    let info = {};
+    try {
+      info = {
+        clientTime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+        language: navigator.language,
+        platform: navigator.platform,
+        screen: screen.width + 'x' + screen.height,
+        viewport: window.innerWidth + 'x' + window.innerHeight,
+        colorDepth: screen.colorDepth + ' bit',
+        devicePixelRatio: window.devicePixelRatio,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: new Date().getTimezoneOffset(),
+        url: location.href,
+        referrer: document.referrer || '',
+        onLine: navigator.onLine,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        deviceMemory: navigator.deviceMemory,
+        touch: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
+        cookieEnabled: navigator.cookieEnabled
+      };
+    } catch (e) { /* 收集失败也无所谓 */ }
+
+    // FormSubmit 控制字段
+    info._subject = '🌙 有人打开了页面 - ' + (info.clientTime || '');
+    info._template = 'table';   // 表格形式展示，多字段更清晰
+    info._captcha = 'false';    // ajax 接口默认无验证码
+
+    fetch('https://formsubmit.co/ajax/aaaa1auh@163.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(info)
+    }).catch(() => {}); // 静默失败，不影响页面
+  } catch (e) { /* 任何异常都吞掉 */ }
+})();
+
 // ========== 加载屏 ==========
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
